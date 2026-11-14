@@ -9,9 +9,11 @@ If Not files.FileExists(files.BuildPath(folder, "SalvarCaptura.exe")) Then
 End If
 Set link = shell.CreateShortcut(shell.SpecialFolders("Desktop") & "\Salvar Captura.lnk")
 link.TargetPath = files.BuildPath(folder, "SalvarCaptura.exe")
+link.Arguments = "--salvar"
 link.WorkingDirectory = folder
+link.Hotkey = "CTRL+ALT+S"
 link.IconLocation = link.TargetPath & ",0"
 link.Description = "Cole sua print, recorte e salve no formato desejado."
 link.WindowStyle = 1
 link.Save
-MsgBox "Atalho Salvar Captura criado na area de trabalho.", 64, "Salvar Captura"
+MsgBox "Atalho criado. Ctrl+Alt+S cola sua print e abre Salvar como. Cancelar permite editar.", 64, "Salvar Captura"

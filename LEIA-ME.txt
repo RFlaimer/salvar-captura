@@ -1,13 +1,17 @@
-SALVAR CAPTURA — v1.0.0 — Windows
+SALVAR CAPTURA — v1.1.0 — Windows
 
 Criada para facilitar o salvamento de sua print sem precisar abrir um programa
 ou aplicativo de edição de imagens separado.
 
-1. Extraia o ZIP e abra SalvarCaptura.exe.
+1. Extraia o ZIP e execute "Criar atalho.vbs" para habilitar Ctrl+Alt+S.
 2. Faça uma captura com Print Screen e conclua a seleção do Windows.
-3. Volte à ferramenta e cole com Ctrl+V.
-4. Se desejar, use Recortar ou Redimensionar. Restaurar volta à imagem colada.
-5. Pressione Ctrl+S para escolher o nome e salvar.
+3. Pressione Ctrl+Alt+S: a ferramenta abre, cola a imagem e mostra "Salvar como".
+   Salve diretamente em JPEG na pasta Imagens ou escolha outro destino e formato.
+   Clique em Cancelar para voltar à imagem e usar Recortar ou Redimensionar.
+   Se a janela já estiver aberta, use Ctrl+V para colar outra imagem.
+4. Depois de editar, pressione Ctrl+S para salvar. Restaurar volta à imagem colada.
+5. Transcrever texto extrai o texto da imagem com o OCR do Windows. Confira o
+   resultado, corrija se necessário e clique em Copiar texto.
 
 O padrão é JPEG (.jpg), na pasta Imagens. Você pode escolher PNG, BMP, GIF ou TIFF.
 Redimensionar permite definir largura e altura em pixels, mantendo a proporção.
@@ -15,6 +19,17 @@ A prévia se ajusta à janela; a dimensão real aparece em pixels no rodapé.
 
 Para criar o atalho com ícone na área de trabalho, execute "Criar atalho.vbs".
 Mantenha o executável na pasta após criar o atalho.
+O Windows gerencia Ctrl+Alt+S pelo atalho. O aplicativo só executa quando aberto,
+não monitora as capturas em segundo plano e encerra ao fechar a janela.
+Outra ferramenta que use Ctrl+Alt+S pode causar conflito com o atalho.
+Abrir o executável diretamente cola a imagem e deixa a prévia disponível.
+Se houver texto, arquivos ou conteúdo misto na área de transferência, ou se ela
+estiver vazia, Ctrl+Alt+S não abre o aplicativo. Só uma imagem válida é aceita.
+
+O OCR é local e usa os idiomas instalados no Windows, preferindo português quando
+disponível. Revise a transcrição: baixa nitidez e letras pequenas podem gerar erros.
+Quando houver mais de um idioma de OCR instalado, você poderá escolher o idioma
+do texto antes de transcrever.
 
 Processamento local. O aplicativo não envia imagens pela internet. Pastas como
 OneDrive podem ser sincronizadas pelo serviço instalado no seu computador.

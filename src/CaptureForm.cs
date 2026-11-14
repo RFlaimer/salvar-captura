@@ -15,16 +15,17 @@ internal sealed class CaptureForm : Form
     private readonly Button crop = new Button();
     private readonly Button resize = new Button();
     private readonly Button restore = new Button();
+    private readonly Button transcribe = new Button();
     private readonly ToolTip tip = new ToolTip();
     private Bitmap capture;
     private Bitmap original;
     private readonly string picturesDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
 
-    public CaptureForm()
+    public CaptureForm(bool quickSave = false, Bitmap initialImage = null)
     {
         Text = "Salvar captura";
         Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-        ClientSize = new Size(900, 620);
+        ClientSize = new Size(1020, 660);
         MinimumSize = new Size(680, 480);
         StartPosition = FormStartPosition.CenterScreen;
         Font = new Font("Segoe UI", 10);
@@ -59,6 +60,13 @@ internal sealed class CaptureForm : Form
         restore.Enabled = false;
         restore.Click += delegate { if (original != null) { SetCapture(original, false); restore.Enabled = false; } };
         toolbar.Controls.Add(restore);
+        transcribe.Text = "Transcrever texto"; StyleButton(transcribe, 175, Color.FromArgb(225, 232, 244));
+        transcribe.Enabled = false;
+        using (var resource = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("TranscreverTexto.png")) {
+            if (resource != null) using (var image = Image.FromStream(resource)) transcribe.Image = new Bitmap(image, new Size(22, 22));
+        }
+        transcribe.TextImageRelation = TextImageRelation.ImageBeforeText;
+        transcribe.Click += delegate { TranscribeCapture(); }; toolbar.Controls.Add(transcribe);
         preview.Dock = DockStyle.Fill;
         preview.BackColor = Color.FromArgb(229, 234, 242);
         preview.SizeMode = PictureBoxSizeMode.Zoom;
@@ -80,6 +88,13 @@ internal sealed class CaptureForm : Form
             if (e.Control && e.KeyCode == Keys.V) { e.SuppressKeyPress = true; PasteCapture(); }
             if (e.Control && e.KeyCode == Keys.S) { e.SuppressKeyPress = true; SaveCapture(); }
         };
+        if (initialImage != null) SetCapture(initialImage);
+        Shown += delegate {
+            BeginInvoke(new MethodInvoker(delegate {
+                if (quickSave) { if (capture != null) SaveCapture(); }
+                else PasteCapture(true);
+            }));
+        };
 
     }
 
@@ -95,7 +110,7 @@ internal sealed class CaptureForm : Form
         var old = capture; capture = new Bitmap(image); preview.Image = capture;
         if (old != null) old.Dispose();
         if (rememberOriginal) { if (original != null) original.Dispose(); original = new Bitmap(image); }
-        placeholder.Visible = false; save.Enabled = crop.Enabled = resize.Enabled = true;
+        placeholder.Visible = false; save.Enabled = crop.Enabled = resize.Enabled = transcribe.Enabled = true;
         restore.Enabled = !rememberOriginal;
         status.Text = String.Format("Imagem: {0} × {1} pixels. Recorte, redimensione ou salve.", capture.Width, capture.Height);
     }
@@ -115,11 +130,46 @@ internal sealed class CaptureForm : Form
             catch (Exception ex) { MessageBox.Show(this, ex.Message, "Não foi possível redimensionar", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
     }
-    private void PasteCapture() {
+    private async void TranscribeCapture() {
+        if (capture == null) return;
+        transcribe.Enabled = false;
+        status.Text = "Transcrevendo o texto da imagem no próprio Windows...";
         try {
-            if (!Clipboard.ContainsImage()) { status.Text = "Nenhuma imagem para colar. Faça uma captura e tente Ctrl+V novamente."; return; }
-            using (var image = Clipboard.GetImage()) if (image != null) SetCapture(image);
-        } catch (Exception ex) { MessageBox.Show(this, "Não foi possível ler a área de transferência. Tente novamente.\r\n\r\n" + ex.Message, "Colar imagem", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            string language = null;
+            var languages = WindowsOcr.GetLanguages();
+            if (languages.Length > 1) {
+                using (var chooser = new OcrLanguageDialog(languages)) {
+                    if (chooser.ShowDialog(this) != DialogResult.OK) { status.Text = "Transcrição cancelada. A imagem continua disponível."; return; }
+                    language = chooser.SelectedLanguage;
+                }
+            }
+            using (var snapshot = new Bitmap(capture)) {
+                var result = await WindowsOcr.RecognizeAsync(snapshot, language);
+                if (IsDisposed) return;
+                if (String.IsNullOrWhiteSpace(result.Text)) { status.Text = "Nenhum texto encontrado. Tente uma imagem mais nítida ou um recorte da área com texto."; return; }
+                using (var dialog = new TranscriptionDialog(result)) dialog.ShowDialog(this);
+                status.Text = "Transcrição concluída. A imagem continua disponível para editar ou salvar.";
+            }
+        } catch (Exception ex) {
+            if (!IsDisposed) MessageBox.Show(this, ex.Message, "Não foi possível transcrever", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        } finally { if (!IsDisposed) transcribe.Enabled = capture != null; }
+    }
+    private bool PasteCapture(bool opening = false) {
+        try {
+            if (!Clipboard.ContainsImage()) {
+                if (!opening) status.Text = "Nenhuma imagem para colar. Faça uma captura e tente Ctrl+V novamente.";
+                return false;
+            }
+            using (var image = Clipboard.GetImage()) {
+                if (image == null) return false;
+                SetCapture(image);
+                return true;
+            }
+        } catch (Exception ex) {
+            if (opening) status.Text = "Não foi possível colar automaticamente. Pressione Ctrl+V para tentar novamente.";
+            else MessageBox.Show(this, "Não foi possível ler a área de transferência. Tente novamente.\r\n\r\n" + ex.Message, "Colar imagem", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return false;
+        }
     }
     private void SaveCapture() {
         if (capture == null) return;
@@ -184,14 +234,26 @@ internal sealed class CaptureForm : Form
         }
     }
     protected override void Dispose(bool disposing) {
-        if (disposing) { preview.Image = null; if (capture != null) capture.Dispose(); if (original != null) original.Dispose(); tip.Dispose(); }
+        if (disposing) { preview.Image = null; if (capture != null) capture.Dispose(); if (original != null) original.Dispose(); if (transcribe.Image != null) transcribe.Image.Dispose(); tip.Dispose(); }
         base.Dispose(disposing);
     }
 
     [STAThread]
     public static void Main(string[] args) {
+        bool quickSave = args.Any(value => String.Equals(value, "--salvar", StringComparison.OrdinalIgnoreCase));
+        Bitmap initialImage = null;
+        if (quickSave) {
+            try { initialImage = ClipboardImage.ReadImageOnly(Clipboard.GetDataObject()); }
+            catch { return; }
+            if (initialImage == null) return;
+        }
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
-        Application.Run(new CaptureForm());
+        try {
+            using (var form = new CaptureForm(quickSave, initialImage)) {
+                if (initialImage != null) { initialImage.Dispose(); initialImage = null; }
+                Application.Run(form);
+            }
+        } finally { if (initialImage != null) initialImage.Dispose(); }
     }
 }

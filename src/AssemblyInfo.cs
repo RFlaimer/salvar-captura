@@ -3,5 +3,5 @@ using System.Reflection;
 [assembly: AssemblyDescription("Cole, recorte, redimensione e salve sua print sem abrir um editor de imagens separado.")]
 [assembly: AssemblyProduct("Salvar Captura")]
 [assembly: AssemblyCompany("RFlaimer")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
