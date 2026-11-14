@@ -1,0 +1,29 @@
+SALVAR CAPTURA — v1.0.0 — Windows
+
+Criada para facilitar o salvamento de sua print sem precisar abrir um programa
+ou aplicativo de edição de imagens separado.
+
+1. Extraia o ZIP e abra SalvarCaptura.exe.
+2. Faça uma captura com Print Screen e conclua a seleção do Windows.
+3. Volte à ferramenta e cole com Ctrl+V.
+4. Se desejar, use Recortar ou Redimensionar. Restaurar volta à imagem colada.
+5. Pressione Ctrl+S para escolher o nome e salvar.
+
+O padrão é JPEG (.jpg), na pasta Imagens. Você pode escolher PNG, BMP, GIF ou TIFF.
+Redimensionar permite definir largura e altura em pixels, mantendo a proporção.
+A prévia se ajusta à janela; a dimensão real aparece em pixels no rodapé.
+
+Para criar o atalho com ícone na área de trabalho, execute "Criar atalho.vbs".
+Mantenha o executável na pasta após criar o atalho.
+
+Processamento local. O aplicativo não envia imagens pela internet. Pastas como
+OneDrive podem ser sincronizadas pelo serviço instalado no seu computador.
+JPEG tem compressão com perda; PNG preserva transparência. GIF tem cores limitadas.
+JPEG e BMP usam fundo branco nas áreas transparentes.
+
+Requisitos: Windows 10/11, .NET Framework 4.x. Não precisa de administrador.
+O executável não possui assinatura digital.
+Se uma pasta bloquear a gravação, a ferramenta oferece salvar na subpasta Capturas
+ao lado do executável. Use uma pasta em que sua conta possa gravar.
+
+Código e novas versões: https://github.com/RFlaimer/salvar-captura
